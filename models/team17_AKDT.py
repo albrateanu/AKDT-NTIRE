@@ -338,3 +338,17 @@ class NoiseEstimator(nn.Module):
         noise_map = torch.cat([noise_local, noise_global], dim=1)
         output = self.out_conv(noise_map)
         return output
+
+class RetinexFormer(nn.Module):
+    def __init__(self, in_channels=3, out_channels=3, n_feat=32, stage=1, num_blocks=[1,2,2,2]):
+        super(RetinexFormer, self).__init__()
+        self.body = Transformer(inp_channels=in_channels, out_channels=out_channels, dim=n_feat, num_blocks=num_blocks)
+
+    def forward(self, x):
+        """
+        x: [b,c,h,w]
+        return out:[b,c,h,w]
+        """
+        out = self.body(x)
+
+        return out

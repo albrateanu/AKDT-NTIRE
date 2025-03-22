@@ -32,21 +32,26 @@ def select_model(args, device):
                 new_state_dict[k.replace("model.", "")] = v
         model.load_state_dict(new_state_dict, strict=True)
     if model_id == 17:
-        # SGN test
-        from models.team17_AKDT import Transformer
-        name, data_range = f"{model_id:02}_RFDN_baseline", 1.0
+        # AKDT test
+        from models.team17_AKDT import RetinexFormer
+        name, data_range = f"{model_id:02}_AKDT_baseline", 1.0
         model_path = os.path.join('model_zoo', 'team17_akdt.pth')
-        model = Transformer()
+        model = RetinexFormer()
 
-        state_dict = torch.load(model_path)["state_dict"]
-        state_dict.pop("current_val_metric")
-        state_dict.pop("best_val_metric")
-        state_dict.pop("best_iter")
-        new_state_dict = {}
-        for k, v in state_dict.items():
-            if k.find("model.") >= 0:
-                new_state_dict[k.replace("model.", "")] = v
-        model.load_state_dict(new_state_dict, strict=True)
+        checkpoint = torch.load(model_path)
+
+        first_key = list(checkpoint.keys())[0]
+        if first_key.startswith('module.'):
+            new_state_dict = OrderedDict()
+            for k, v in checkpoint.items():
+                name = k[len("module."):] 
+                new_state_dict[name] = v
+            checkpoint = new_state_dict
+
+        model.load_state_dict(checkpoint["params"])
+
+        model.eval()
+        print("✅ Loaded Team17 AKDT model (ID=17) successfully!")
     else:
         raise NotImplementedError(f"Model {model_id} is not implemented.")
 
